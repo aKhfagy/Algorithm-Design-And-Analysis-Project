@@ -1,8 +1,8 @@
 # Running Time Files
 
-These files contain the data optained from the run time of the algorithms. 
+The notebook contains the code to generate the statistical analysis of the algorithm, run the algorithm and the files will apear here.
 
-## It contains the data in the format: 
+## The data format: 
 
 NumOfNodes,NumOfEdges,MaxFlow,EllapsedTime
 
