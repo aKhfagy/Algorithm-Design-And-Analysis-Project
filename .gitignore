@@ -4,3 +4,4 @@ tests/
 .vscode/
 *.h
 .ipynb_checkpoints/
+*.docx
