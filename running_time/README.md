@@ -6,4 +6,6 @@ The notebook contains the code to generate the statistical analysis of the algor
 
 NumOfNodes,NumOfEdges,MaxFlow,EllapsedTime
 
-where the ellapsed time is calculated in milliseconds
+The ellapsed time is calculated in milliseconds.
+
+All the numbers are separated by a single space.
