@@ -32,16 +32,20 @@ namespace NetworkFlow
                 public Dinic(int vertex_size)
                 {
                     V = vertex_size;
-                    //  Enumerable.Repeat repeat zeroes V times
-                    G = Enumerable.Repeat(0, V).Select(_ => new List<Edge>()).ToList();
-                    level = Enumerable.Repeat(0, V).ToList(); //convert to list
-                    iter = Enumerable.Repeat(0, V).ToList();
+                    // initialize lists
+                    G = new List<List<Edge>>();
+                    for (int i = 0; i < V; ++i)
+                    {
+                        G.Add(new List<Edge>());
+                    }
+                    level = new List<int>();
+                    iter = new List<int>();
                 }
 
                 class Edge
                 {
                     public int To, Cap, Rev;
-                    public Edge(int to, int cap, int rev) //rev -->the opposite side.
+                    public Edge(int to, int cap, int rev) //rev is index of opposite edge.
                     {
                         To = to;
                         Cap = cap;
@@ -52,33 +56,39 @@ namespace NetworkFlow
 
                 public void AddEdge(int from, int to, int cap)
                 {
-                    G[from].Add(new Edge(to, cap, G[to].Count));
-                    G[to].Add(new Edge(from, 0, G[from].Count - 1));
+                    G[from].Add(new Edge(to, cap, G[to].Count)); // G[to].Count is index of reverse edge in to list
+                    G[to].Add(new Edge(from, 0, G[from].Count - 1)); // G[from].Count - 1 is index of reverse edge in from list
                 }
 
                 public int MaxFlow(int s, int t)
                 {
                     int flow = 0;
-                    while (true)
+                    while (true) // O(V**2 * E)
                     {
-                        BFS(s);
+                        BFS(s); // O(E)
                         if (level[t] < 0)
                         {
                             return flow;
                         }
-                        iter = Enumerable.Repeat(0, V).ToList();
-                        var f = DFS(s, t, int.MaxValue);
-                        while (f > 0)
+                        for (int i = 0; i < V; ++i)
+                        {
+                            iter[i] = 0;
+                        }
+                        var f = DFS(s, t, int.MaxValue); // O(V + E)
+                        while (f > 0) // O(VE)
                         {
                             flow += f;
-                            f = DFS(s, t, int.MaxValue);
+                            f = DFS(s, t, int.MaxValue); // O(V + E)
                         }
                     }
                 }
-                // BFS 1- levels, 2- find path from s->t until blocking flow are reached
+                // BFS 1) levels, 2) find path from s->t until blocking flow are reached
                 void BFS(int s)     // O(E)
                 {
-                    level = Enumerable.Repeat(-1, V).ToList(); //all levels=-1 but s=0
+                    for (int i = 0; i < V; ++i) 
+                    {
+                        level[i] = -1;
+                    }
                     level[s] = 0;
                     var que = new Queue<int>();
                     que.Enqueue(s);
@@ -101,10 +111,10 @@ namespace NetworkFlow
 
                 }
 
-                int DFS(int v, int t, int f)     //O(EV)
+                int DFS(int v, int t, int f)     //O(V + E)
                 {
                     if (v == t) return f;
-                    for (int i = iter[v]; i < G[v].Count; i++) // start from the last iteration he stoped at
+                    for (int i = iter[v]; i < G[v].Count; i++)
                     {
                         iter[v] = i;
                         var e = G[v][i];
