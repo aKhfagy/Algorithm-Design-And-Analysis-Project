@@ -1,9 +1,15 @@
 # Running Time Files
 
-These files contain the data optained from the run time of the algorithms. 
+The notebook contains the code to generate the statistical analysis of the algorithm, run the algorithm and the files will apear here.
 
-## It contains the data in the format: 
+## The data format: 
 
 NumOfNodes,NumOfEdges,MaxFlow,EllapsedTime
 
-where the ellapsed time is calculated in milliseconds
+The ellapsed time is calculated in milliseconds.
+
+All the numbers are separated by a single comma, for example a record in the file will look like
+
+106,7791,3621538,33
+
+and each record is in it's own line.
