@@ -14,6 +14,157 @@ namespace NetworkFlow
 {
     class Program
     {
+
+        #region Dinic
+        class TestDinic
+        {
+            class Dinic
+            {
+                //O(v *blocking_flow RT)
+                //blocking_flow_RT --> DFS which O(VE)
+                //DINIC COM = O(V^2 *E)
+
+                List<List<Edge>> G;
+                int V;
+                List<int> level;
+                List<int> iter;
+
+                public Dinic(int vertex_size)
+                {
+                    V = vertex_size;
+                    //  Enumerable.Repeat repeat zeroes V times
+                    G = Enumerable.Repeat(0, V).Select(_ => new List<Edge>()).ToList();
+                    level = Enumerable.Repeat(0, V).ToList(); //convert to list
+                    iter = Enumerable.Repeat(0, V).ToList();
+                }
+
+                class Edge
+                {
+                    public int To, Cap, Rev;
+                    public Edge(int to, int cap, int rev) //rev -->the opposite side.
+                    {
+                        To = to;
+                        Cap = cap;
+                        Rev = rev;
+                    }
+
+                }
+
+                public void AddEdge(int from, int to, int cap)
+                {
+                    G[from].Add(new Edge(to, cap, G[to].Count));
+                    G[to].Add(new Edge(from, 0, G[from].Count - 1));
+                }
+
+                public int MaxFlow(int s, int t)
+                {
+                    int flow = 0;
+                    while (true)
+                    {
+                        BFS(s);
+                        if (level[t] < 0)
+                        {
+                            return flow;
+                        }
+                        iter = Enumerable.Repeat(0, V).ToList();
+                        var f = DFS(s, t, int.MaxValue);
+                        while (f > 0)
+                        {
+                            flow += f;
+                            f = DFS(s, t, int.MaxValue);
+                        }
+                    }
+                }
+                // BFS 1- levels, 2- find path from s->t until blocking flow are reached
+                void BFS(int s)     // O(E)
+                {
+                    level = Enumerable.Repeat(-1, V).ToList(); //all levels=-1 but s=0
+                    level[s] = 0;
+                    var que = new Queue<int>();
+                    que.Enqueue(s);
+
+                    while (que.Count != 0)
+                    {
+                        var v = que.Dequeue();
+                        for (int i = 0; i < G[v].Count; i++)
+                        {
+                            var e = G[v][i];
+                            if (e.Cap > 0 && level[e.To] < 0)
+                            {
+                                level[e.To] = level[v] + 1;
+                                que.Enqueue(e.To);
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                int DFS(int v, int t, int f)     //O(EV)
+                {
+                    if (v == t) return f;
+                    for (int i = iter[v]; i < G[v].Count; i++) // start from the last iteration he stoped at
+                    {
+                        iter[v] = i;
+                        var e = G[v][i];
+                        if (e.Cap > 0 && level[v] < level[e.To])
+                        {
+                            var d = DFS(e.To, t, Math.Min(f, e.Cap));
+                            if (d > 0)
+                            {
+                                e.Cap -= d;
+                                G[e.To][e.Rev].Cap += d;
+                                return d;
+                            }
+                        }
+                    }
+                    return 0;
+                }
+            }
+            public static void Test(int NumTestCases)
+            {
+                string path_running_time = "running_time/Dinc.txt";
+                List<string> running_times = new List<string>();
+                for (int test_case = 1; test_case <= NumTestCases; ++test_case)
+                {
+                    string path = "tests/" + test_case.ToString() + ".txt";
+                    FileStream file = new FileStream(path, FileMode.Open, FileAccess.Read);
+                    StreamReader sr = new StreamReader(file);
+                    string[] line = sr.ReadLine().Split(" ");
+                    int num_of_nodes = int.Parse(line[0]);
+                    int num_of_edges = int.Parse(line[1]);
+                    Dinic dinic = new Dinic(num_of_nodes);
+                    line = sr.ReadLine().Split(" ");
+                    int source = int.Parse(line[0]) - 1;
+                    int sink = int.Parse(line[1]) - 1;
+                    for (int i = 0; i < num_of_edges; ++i)
+                    {
+                        line = sr.ReadLine().Split(" ");
+                        int u = int.Parse(line[0]) - 1, v = int.Parse(line[1]) - 1, c = int.Parse(line[2]);
+                        dinic.AddEdge(u, v, c);
+                    }
+                    int model_answer = int.Parse(sr.ReadLine().Split(" ")[0]);
+                    Stopwatch sw = Stopwatch.StartNew();
+                    int max_flow = dinic.MaxFlow(source, sink);
+                    sw.Stop();
+                    if (max_flow == model_answer)
+                    {
+                        Console.WriteLine("Test #" + test_case + " is sucessfull and took " + sw.ElapsedMilliseconds + " milliseconds");
+                        running_times.Add(num_of_nodes + "," + num_of_edges + "," + max_flow + "," + sw.ElapsedMilliseconds);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Wrong answer on test #" + test_case + ", the right one is " + model_answer);
+                        break;
+                    }
+                }
+                File.WriteAllLines(path_running_time, running_times.ToArray());
+            }
+        }
+
+        #endregion
+
         #region Arc
         class Arc
         {
@@ -57,26 +208,27 @@ namespace NetworkFlow
 
             static void bfs(int startNode, int endNode)
             {
+                // fill parent list from graph list ( carry list of array of neighbours of each node
 
-                parentsList = Enumerable.Repeat((int)-1, graph.Length).ToArray();
+                parentsList = Enumerable.Repeat((int)-1, graph.Length).ToArray(); // initialize all parentlist with -1 
 
-                Queue<int> q = new Queue<int>();
-                q.Enqueue(startNode);
+                Queue<int> q = new Queue<int>(); // queue to sort each node with neighbours from start to end
+                q.Enqueue(startNode); 
 
-                while (q.Count != 0)
+                while (q.Count != 0) // loop on our queue
                 {
-                    int currentNode = q.Dequeue();
+                    int currentNode = q.Dequeue(); // Take element of first place and dequeu it
 
-                    for (int i = 0; i < graph[currentNode].Count; i++)
+                    for (int i = 0; i < graph[currentNode].Count; i++) // loop on array of list at each index 
                     {
-                        int idx = graph[currentNode][i];
-                        Arc.Edge e = edges[idx];
-                        if (parentsList[e.to] == -1 && e.capacity > e.flow && e.to != startNode)
+                        int idx = graph[currentNode][i]; //index variable carry each element at he graph from zero index till count
+                        Arc.Edge e = edges[idx];  // ARC.EDGE : nested class carry : from, to, capacity, flow ** put in list of edges the information of the current edge 
+                        if (parentsList[e.to] == -1 && e.capacity > e.flow && e.to != startNode) // check that : 1 - current node is not visited , 2- the capacity allow to pass the flow , 3- the next node is not the start node 
                         {
-                            parentsList[e.to] = idx;
-                            if (e.to == endNode)
-                                return;
-                            q.Enqueue(e.to);
+                            parentsList[e.to] = idx;  // put in parent list the parent of current node 
+                            if (e.to == endNode) // the graph end
+                                return; // break from the function 
+                            q.Enqueue(e.to);  // put in queue the child of of parent 
                         }
                     }
                 }
@@ -85,23 +237,23 @@ namespace NetworkFlow
             static int edmondsKarp(int startNode, int endNode)
             {
                 int maxFlow = 0;
-                while (true)
+                while (true) // O(EV)
                 {
-                    bfs(startNode, endNode);
-                    if (parentsList[endNode] == -1)
+                    bfs(startNode, endNode); // O(E+V) ( fill parent list )
+                    if (parentsList[endNode] == -1) // check that all list is visited from start to end
                     {
                         break;
                     }
-                    int flow = int.MaxValue;
-                    for (int node = parentsList[endNode]; node != -1; node = parentsList[edges[node].from])
+                    int flow = int.MaxValue; // initialize the flow with infinity
+                    for (int node = parentsList[endNode]; node != -1; node = parentsList[edges[node].from]) // O(E)   (start from end of parent list and break on reaching start and increment by finding parents )
                     {
-                        flow = Math.Min(flow, edges[node].capacity - edges[node].flow);
+                        flow = Math.Min(flow, edges[node].capacity - edges[node].flow); //pring min between the infinity and residual ( capacity - flow) ** min in the path
                     }
                     maxFlow += flow;
-                    int currentNode = parentsList[endNode];
-                    while (currentNode != -1)
+                    int currentNode = parentsList[endNode]; 
+                    while (currentNode != -1) // O(E) loop from end til start and increment with the parent
                     {
-                        Arc.add_flow(currentNode, flow, ref edges);
+                        Arc.add_flow(currentNode, flow, ref edges); // O(E)   (fill the list of edges by calling add_flow )
                         currentNode = parentsList[edges[currentNode].from];
                     }
                 }
@@ -259,6 +411,8 @@ namespace NetworkFlow
         {
             Console.Write("Enter the number of test cases to run: ");
             int test = int.Parse(Console.ReadLine());
+            Console.WriteLine("* * * * * * * * * * * * Dinic * * * * * * * * * * * *");
+            TestDinic.Test(test);
             Console.WriteLine("* * * * * * * * * * Edmonds Karp * * * * * * * * * *");
             EdmondsKarp.Test(test);
             Console.WriteLine("* * * * * * * * *  Ford Fulkerson  * * * * * * * * *");
