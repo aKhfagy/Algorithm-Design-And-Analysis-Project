@@ -5,3 +5,4 @@ tests/
 *.h
 .ipynb_checkpoints/
 *.docx
+*.txt
