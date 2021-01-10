@@ -67,37 +67,36 @@ namespace NetworkFlow
                     int flow = 0;
                     while (true) // O(V**2 * E)
                     {
-                        BFS(s); // O(E)
+                        BFS(s); // O(E+V)
                         if (level[t] < 0)
                             return flow;
-                        for (int i = 0; i < V; ++i)
+                        for (int i = 0; i < V; ++i) //O(V) max num of blocking flow
                             iter[i] = 0;
-                        var f = DFS(s, t, int.MaxValue); // O(V + E)
+                        var f = DFS(s, t, int.MaxValue); //O(EV)  f if the remaining flow
                         while (f > 0) // O(VE)
                         {
                             flow += f;
-                            f = DFS(s, t, int.MaxValue); // O(V + E)
+                            f = DFS(s, t, int.MaxValue);
                         }
                     }
                 }
-                // BFS 1) levels, 2) find path from s->t until blocking flow are reached
-                void BFS(int s)     // O(E)
+                // BFS 1) levels 
+                void BFS(int s)     // O(E + V)
                 {
-                    for (int i = 0; i < V; ++i) 
+                    for (int i = 0; i < V; ++i) //O(V)
                         level[i] = -1;
                     level[s] = 0;
                     var que = new Queue<int>();
                     que.Enqueue(s);
-
-                    while (que.Count != 0)
+                    while (que.Count != 0)  //O(E)
                     {
-                        var v = que.Dequeue();
+                        var v = que.Dequeue(); //Dequeue s at first time   v is a parent
                         for (int i = 0; i < G[v].Count; i++)
                         {
-                            var e = G[v][i];
-                            if (e.Cap > 0 && level[e.To] < 0)
+                            var e = G[v][i];   //edges list second one of a vertix
+                            if (e.Cap > 0 && level[e.To] < 0)     //level[e.TO]=-1
                             {
-                                level[e.To] = level[v] + 1;
+                                level[e.To] = level[v] + 1; //new level = level parent + 1
                                 que.Enqueue(e.To);
                             }
 
@@ -107,20 +106,21 @@ namespace NetworkFlow
 
                 }
 
-                int DFS(int v, int t, int f)     //O(V + E)
+                int DFS(int v, int t, int f)     //O(EV)  remove edges next remove nodes until v==sink   
                 {
-                    if (v == t) return f;
-                    for (int i = iter[v]; i < G[v].Count; i++)
+                    if (v == t) return f;    //if vertix = sink  (Base Case)
+                    for (int i = iter[v]; i < G[v].Count; i++)      //every time remove edge of cap = 0 when node doesn't have cap remove it
                     {
-                        iter[v] = i;
+                        iter[v] = i;        //iter = 0 at first time
                         var e = G[v][i];
-                        if (e.Cap > 0 && level[v] < level[e.To])
+                        if (e.Cap > 0 && level[v] < level[e.To])  // vertix level must be less than to level
                         {
-                            var d = DFS(e.To, t, Math.Min(f, e.Cap));
-                            if (d > 0)
+                            // d id the remaining capacity
+                            var d = DFS(e.To, t, Math.Min(f, e.Cap));   //recursion again take the edge with min capacity
+                            if (d > 0)     //d is remaining flow
                             {
-                                e.Cap -= d;
-                                G[e.To][e.Rev].Cap += d;
+                                e.Cap -= d;    // decrease cap of the remaining flow
+                                G[e.To][e.Rev].Cap += d;    //increase cap of the max flow
                                 return d;
                             }
                         }
