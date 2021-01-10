@@ -34,12 +34,14 @@ namespace NetworkFlow
                     V = vertex_size;
                     // initialize lists
                     G = new List<List<Edge>>();
+                    level = new List<int>();
+                    iter = new List<int>();
                     for (int i = 0; i < V; ++i)
                     {
                         G.Add(new List<Edge>());
+                        level.Add(0);
+                        iter.Add(0);
                     }
-                    level = new List<int>();
-                    iter = new List<int>();
                 }
 
                 class Edge
@@ -67,13 +69,9 @@ namespace NetworkFlow
                     {
                         BFS(s); // O(E)
                         if (level[t] < 0)
-                        {
                             return flow;
-                        }
                         for (int i = 0; i < V; ++i)
-                        {
                             iter[i] = 0;
-                        }
                         var f = DFS(s, t, int.MaxValue); // O(V + E)
                         while (f > 0) // O(VE)
                         {
@@ -86,9 +84,7 @@ namespace NetworkFlow
                 void BFS(int s)     // O(E)
                 {
                     for (int i = 0; i < V; ++i) 
-                    {
                         level[i] = -1;
-                    }
                     level[s] = 0;
                     var que = new Queue<int>();
                     que.Enqueue(s);
@@ -218,27 +214,26 @@ namespace NetworkFlow
 
             static void bfs(int startNode, int endNode)
             {
-                // fill parent list from graph list ( carry list of array of neighbours of each node
 
-                parentsList = Enumerable.Repeat((int)-1, graph.Length).ToArray(); // initialize all parentlist with -1 
+                parentsList = Enumerable.Repeat((int)-1, graph.Length).ToArray();
 
-                Queue<int> q = new Queue<int>(); // queue to sort each node with neighbours from start to end
-                q.Enqueue(startNode); 
+                Queue<int> q = new Queue<int>();
+                q.Enqueue(startNode);
 
-                while (q.Count != 0) // loop on our queue
+                while (q.Count != 0)
                 {
-                    int currentNode = q.Dequeue(); // Take element of first place and dequeu it
+                    int currentNode = q.Dequeue();
 
-                    for (int i = 0; i < graph[currentNode].Count; i++) // loop on array of list at each index 
+                    for (int i = 0; i < graph[currentNode].Count; i++)
                     {
-                        int idx = graph[currentNode][i]; //index variable carry each element at he graph from zero index till count
-                        Arc.Edge e = edges[idx];  // ARC.EDGE : nested class carry : from, to, capacity, flow ** put in list of edges the information of the current edge 
-                        if (parentsList[e.to] == -1 && e.capacity > e.flow && e.to != startNode) // check that : 1 - current node is not visited , 2- the capacity allow to pass the flow , 3- the next node is not the start node 
+                        int idx = graph[currentNode][i];
+                        Arc.Edge e = edges[idx];
+                        if (parentsList[e.to] == -1 && e.capacity > e.flow && e.to != startNode)
                         {
-                            parentsList[e.to] = idx;  // put in parent list the parent of current node 
-                            if (e.to == endNode) // the graph end
-                                return; // break from the function 
-                            q.Enqueue(e.to);  // put in queue the child of of parent 
+                            parentsList[e.to] = idx;
+                            if (e.to == endNode)
+                                return;
+                            q.Enqueue(e.to);
                         }
                     }
                 }
@@ -247,23 +242,23 @@ namespace NetworkFlow
             static int edmondsKarp(int startNode, int endNode)
             {
                 int maxFlow = 0;
-                while (true) // O(EV)
+                while (true)
                 {
-                    bfs(startNode, endNode); // O(E+V) ( fill parent list )
-                    if (parentsList[endNode] == -1) // check that all list is visited from start to end
+                    bfs(startNode, endNode);
+                    if (parentsList[endNode] == -1)
                     {
                         break;
                     }
-                    int flow = int.MaxValue; // initialize the flow with infinity
-                    for (int node = parentsList[endNode]; node != -1; node = parentsList[edges[node].from]) // O(E)   (start from end of parent list and break on reaching start and increment by finding parents )
+                    int flow = int.MaxValue;
+                    for (int node = parentsList[endNode]; node != -1; node = parentsList[edges[node].from])
                     {
-                        flow = Math.Min(flow, edges[node].capacity - edges[node].flow); //pring min between the infinity and residual ( capacity - flow) ** min in the path
+                        flow = Math.Min(flow, edges[node].capacity - edges[node].flow);
                     }
                     maxFlow += flow;
-                    int currentNode = parentsList[endNode]; 
-                    while (currentNode != -1) // O(E) loop from end til start and increment with the parent
+                    int currentNode = parentsList[endNode];
+                    while (currentNode != -1)
                     {
-                        Arc.add_flow(currentNode, flow, ref edges); // O(E)   (fill the list of edges by calling add_flow )
+                        Arc.add_flow(currentNode, flow, ref edges);
                         currentNode = parentsList[edges[currentNode].from];
                     }
                 }
