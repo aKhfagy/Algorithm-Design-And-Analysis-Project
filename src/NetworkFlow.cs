@@ -76,7 +76,7 @@ namespace NetworkFlow
                         while (f > 0) // O(VE)
                         {
                             flow += f;
-                            f = DFS(s, t, int.MaxValue); // O(V + E)
+                            f = DFS(s, t, int.MaxValue); // O(E)
                         }
                     }
                 }
@@ -107,7 +107,7 @@ namespace NetworkFlow
 
                 }
 
-                int DFS(int v, int t, int f)     //O(V + E)
+                int DFS(int v, int t, int f)     //O(E)
                 {
                     if (v == t) return f;
                     for (int i = iter[v]; i < G[v].Count; i++)
@@ -188,8 +188,8 @@ namespace NetworkFlow
 
             public static void add_flow(int idx, int flow, ref List<Edge> edges)
             {
-                edges[idx].flow += flow;
-                edges[idx ^ 1].flow -= flow;
+                edges[idx].flow += flow; 
+                edges[idx ^ 1].flow -= flow; 
             }
             public static void add_edge(int u, int v, int c, ref List<Edge> edges, ref List<int>[] graph)
             {
@@ -244,19 +244,19 @@ namespace NetworkFlow
                 int maxFlow = 0;
                 while (true) // O(E**2V)
                 {
-                    bfs(startNode, endNode);
+                    bfs(startNode, endNode); // O(V + E)
                     if (parentsList[endNode] == -1)// check that all list is visited from start to end
                     {
                         break;
                     }
                     int flow = int.MaxValue;
-                    for (int node = parentsList[endNode]; node != -1; node = parentsList[edges[node].from]) // O(E)   (start from end of parent list and break on reaching start and increment by finding parents )
+                    for (int node = parentsList[endNode]; node != -1; node = parentsList[edges[node].from]) // O(V)   (start from end of parent list and break on reaching start and increment by finding parents )
                     {
                         flow = Math.Min(flow, edges[node].capacity - edges[node].flow);//calc min between the infinity and residual ( capacity - flow) ** min in the path
                     }
                     maxFlow += flow;
                     int currentNode = parentsList[endNode];
-                    while (currentNode != -1)// O(E)   (fill the list of edges by calling add_flow )
+                    while (currentNode != -1)// O(V)   (fill the list of edges by calling add_flow )
                     {
                         Arc.add_flow(currentNode, flow, ref edges);  
                         currentNode = parentsList[edges[currentNode].from];
